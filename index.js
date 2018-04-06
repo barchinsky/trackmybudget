@@ -19,7 +19,7 @@ var LoggerFactory = require("./public/src/utils/logger.js").LoggerFactory;
 var logger = LoggerFactory.getLogger({label:"Server"});
 
 var host = process.env.BUDGET_HOST; 
-var port = process.env.OPENSHIFT_NODEJS_PORT || 18000;
+var port = process.env.PORT || 18000;
 
 if (typeof host === "undefined") {
   //  Log errors on OpenShift but continue w/ 127.0.0.1 - this
