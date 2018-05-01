@@ -95,43 +95,7 @@ module.exports = function(app, passport, logger, jwt) {
     //db.createBudget(userId, request.body)
   });
 
-  app.post('/add/category', verifyJWT_MW, isLogedIn, function(request, response, next) {
-    var user = request.user;
-
-    var {name, color} = request.body;
-    logger.info(`category name:${name} color:${color} userId:${user.userId}`);
-
-    var newCat = new Category();
-    newCat.userId = user.userId;
-    newCat.name = name;
-    newCat.color = color;
-
-    newCat.save( err => {
-      if (err) {
-        sendResponse(response, {status: 'failed', error: err});
-        return;
-      } else {
-        sendResponse(response, {status: 'success'});
-      }
-    });
-
-  });
-
-  app.post('/categories', verifyJWT_MW, isLogedIn, function(request, response, next) {
-    var user = request.user;
-
-    Category.find({userId: user.userId}, (err, result) => {
-      if(err) {
-        sendResponse(response, {status: 'failed', error: err});
-        return;
-      }
-      console.log(result);
-      sendResponse(response, {status:'success', data: result});
-    });
-
-  });
-
-  app.post('/update/budget', verifyJWT_MW, isLogedIn, function(request, response, next){
+    app.post('/update/budget', verifyJWT_MW, isLogedIn, function(request, response, next){
     var userId = request.user.userId;
     logger.info('update.budget');
     const {budget, name, startDate, endDate, estimate} = request.body;
@@ -167,6 +131,42 @@ module.exports = function(app, passport, logger, jwt) {
     });
 
     //db.createBudget(userId, request.body)
+  });
+
+  app.post('/add/category', verifyJWT_MW, isLogedIn, function(request, response, next) {
+    var user = request.user;
+
+    var {name, color} = request.body;
+    logger.info(`category name:${name} color:${color} userId:${user.userId}`);
+
+    var newCat = new Category();
+    newCat.userId = user.userId;
+    newCat.name = name;
+    newCat.color = color;
+
+    newCat.save( err => {
+      if (err) {
+        sendResponse(response, {status: 'failed', error: err});
+        return;
+      } else {
+        sendResponse(response, {status: 'success'});
+      }
+    });
+
+  });
+
+  app.post('/categories', verifyJWT_MW, isLogedIn, function(request, response, next) {
+    var user = request.user;
+
+    Category.find({userId: user.userId}, (err, result) => {
+      if(err) {
+        sendResponse(response, {status: 'failed', error: err});
+        return;
+      }
+      console.log(result);
+      sendResponse(response, {status:'success', data: result});
+    });
+
   });
 
   app.post('/update/category', verifyJWT_MW, isLogedIn, function(request, response, next) {
