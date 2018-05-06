@@ -7,4 +7,4 @@ var transactionSchema = mongoose.Schema({
   category: {type: mongoose.Schema.Types.ObjectId, ref: 'Category'}
 });
 
-module.exports = mongoose.model('Category', transactionSchema);
+module.exports = mongoose.model('Transaction', transactionSchema);
