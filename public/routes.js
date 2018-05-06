@@ -221,10 +221,10 @@ module.exports = function(app, passport, logger, jwt) {
   app.post('/add/transaction', verifyJWT_MW, isLogedIn, function(request, response, next) {
     var user = request.user;
 
-    const { date, amount, category } = request.body;
+    const { date, amount, category, comment } = request.body;
 
-    if( !date || !amount || !category ) {
-      sendResponse(response, {status: 'failed', error:'{date}, {amount}, {category} are mandatory!'});
+    if( !date || !amount || !category || !comment ) {
+      sendResponse(response, {status: 'failed', error:'{date}, {amount}, {category}, {comment} are mandatory!'});
       return;
     }
 
@@ -235,6 +235,7 @@ module.exports = function(app, passport, logger, jwt) {
     t.amount = amount;
     t.date = date;
     t.category = category;
+    t.comment = comment;
 
     t.save( (err, res) => {
       if (err) {
@@ -247,12 +248,42 @@ module.exports = function(app, passport, logger, jwt) {
 
   });
 
+  app.post('/update/transaction', verifyJWT_MW, isLogedIn, function(request, response, next) {
+    const user = request.user;
+
+    const { transaction, date, amount, category, comment } = request.body;
+
+    if (!transaction) {
+      sendResponse(response, buildFailedResponse({message:'No transaction id specified!'}));
+      return;
+    }
+
+    if (!date || !amount || !category) {
+      sendResponse(response, buildFailedResponse({message:'{date}, {amount}, {comment} and {category} are mandatory!'}));
+      return;
+    }
+
+    Transaction.findOneAndUpdate(
+      {userId: user.userId, _id: transaction},
+      {$set: {amount: amount, date: date, category: category, comment: comment}},
+      {returnNewDocument: true},
+      (err, res) => {
+        if (err) {
+          sendResponse(response, buildFailedResponse(err));
+          return;
+        }
+
+        sendResponse(response, buildSuccessResponse(res));
+      }
+    )
+  });
+
   app.post('/remove/transaction', verifyJWT_MW, isLogedIn, function(request, response, next) {
     var user = request.user;
     const { transaction } = request.body;
 
     if (!transaction) {
-      sendResponse(response, {status: 'failed', error: 'No transaction id specified!', data:[]});
+      sendResponse(response, buildFailedResponse({message: 'No transaction id specified!'}));
       return;
     }
 
@@ -286,5 +317,21 @@ module.exports = function(app, passport, logger, jwt) {
     response.end();
 
     //logger.info("~sendResponse()");
+  }
+
+  function buildFailedResponse(err) {
+    return {
+      status: 'failed',
+      error: err,
+      data: []
+    }
+  }
+
+  function buildSuccessResponse(data) {
+    return {
+      status: 'success',
+      data: data,
+      erorr: null,
+    }
   }
 }
