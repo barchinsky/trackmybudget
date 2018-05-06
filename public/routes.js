@@ -1,6 +1,7 @@
 var verifyJWT_MW = require('./src/lib/verifyJWT_MW');
 var Budget = require('./src/models/budget');
 var Category = require('./src/models/category');
+var Transaction = require('./src/models/transaction');
 
 module.exports = function(app, passport, logger, jwt) {
   app.get("/", function(request, response){
@@ -49,14 +50,14 @@ module.exports = function(app, passport, logger, jwt) {
         return next(err);
         }
 
-      if (!user) { 
+      if (!user) {
         var msg = request.flash('signupMessage');
         logger.info(msg);
         sendResponse(response, {data: [], msg:msg, err:null});
         return;
 
        }
-      
+
       logger.info('user registered:', user.username);
       sendResponse(response, {data:user});
 
@@ -95,7 +96,7 @@ module.exports = function(app, passport, logger, jwt) {
     //db.createBudget(userId, request.body)
   });
 
-    app.post('/update/budget', verifyJWT_MW, isLogedIn, function(request, response, next){
+  app.post('/update/budget', verifyJWT_MW, isLogedIn, function(request, response, next){
     var userId = request.user.userId;
     logger.info('update.budget');
     const {budget, name, startDate, endDate, estimate} = request.body;
@@ -119,7 +120,7 @@ module.exports = function(app, passport, logger, jwt) {
           startDate: startDate,
           endDate: endDate,
           estimate: estimate,
-        }    
+        }
       },
       (err, result) => {
       if (err) {
@@ -131,6 +132,25 @@ module.exports = function(app, passport, logger, jwt) {
     });
 
     //db.createBudget(userId, request.body)
+  });
+
+  app.post('/budgets', verifyJWT_MW, isLogedIn, function(request, response, next) {
+    var user = request.user;
+
+    Budget.find({userId: user.userId}, (err, result) => {
+      if(err) {
+        sendResponse(response, {status: 'failed', error: err});
+        return;
+      }
+      console.log(result);
+      sendResponse(response, {status:'success', data: result});
+    });
+  });
+
+  app.get('/remove/budget', verifyJWT_MW, isLogedIn, function(request, response, next) {
+    logger.info('remove.budget');
+    sendResponse(response, {status: 'not implemented!'});
+
   });
 
   app.post('/add/category', verifyJWT_MW, isLogedIn, function(request, response, next) {
@@ -149,7 +169,7 @@ module.exports = function(app, passport, logger, jwt) {
         sendResponse(response, {status: 'failed', error: err});
         return;
       } else {
-        sendResponse(response, {status: 'success'});
+        sendResponse(response, {status: 'success', error: null, data:[]});
       }
     });
 
@@ -173,7 +193,7 @@ module.exports = function(app, passport, logger, jwt) {
     var user = request.user;
     const {category, name, color} = request.body;
 
-    if (!category) { 
+    if (!category) {
       sendResponse(response, {status: 'failed', err: 'No category field specified.'});
       return;
     }
@@ -186,7 +206,7 @@ module.exports = function(app, passport, logger, jwt) {
     Category.findOneAndUpdate(
       {userId: user.userId, _id: category},
       {$set: {name: name, color: color} },
-      {returnNewDocument: true}, 
+      {returnNewDocument: true},
       (err, result) => {
         if (err) {
           sendResponse(response, {status: 'failed', data: [], error: err});
@@ -194,28 +214,87 @@ module.exports = function(app, passport, logger, jwt) {
         }
 
         sendResponse(response, {status: 'success', data:result, error: null});
-    
+
     });
   });
 
-
-  app.post('/budgets', verifyJWT_MW, isLogedIn, function(request, response, next) {
+  app.post('/add/transaction', verifyJWT_MW, isLogedIn, function(request, response, next) {
     var user = request.user;
 
-    Budget.find({userId: user.userId}, (err, result) => {
-      if(err) {
-        sendResponse(response, {status: 'failed', error: err});
+    const { date, amount, category, comment } = request.body;
+
+    if( !date || !amount || !category || !comment ) {
+      sendResponse(response, {status: 'failed', error:'{date}, {amount}, {category}, {comment} are mandatory!'});
+      return;
+    }
+
+    const transactionDate = new Date(date);
+
+    var t = new Transaction();
+    t.userId = user.userId;
+    t.amount = amount;
+    t.date = date;
+    t.category = category;
+    t.comment = comment;
+
+    t.save( (err, res) => {
+      if (err) {
+        sendResponse(response, {status: 'failed', error: err, data:[]});
         return;
+      } else {
+        sendResponse(response, {status: 'success', error: null, data:[res]});
       }
-      console.log(result);
-      sendResponse(response, {status:'success', data: result});
     });
+
   });
 
-  app.get('/remove/budget', verifyJWT_MW, isLogedIn, function(request, response, next) {
-    logger.info('remove.budget');
-    sendResponse(response, {status: 'not implemented!'});
+  app.post('/update/transaction', verifyJWT_MW, isLogedIn, function(request, response, next) {
+    const user = request.user;
 
+    const { transaction, date, amount, category, comment } = request.body;
+
+    if (!transaction) {
+      sendResponse(response, buildFailedResponse({message:'No transaction id specified!'}));
+      return;
+    }
+
+    if (!date || !amount || !category) {
+      sendResponse(response, buildFailedResponse({message:'{date}, {amount}, {comment} and {category} are mandatory!'}));
+      return;
+    }
+
+    Transaction.findOneAndUpdate(
+      {userId: user.userId, _id: transaction},
+      {$set: {amount: amount, date: date, category: category, comment: comment}},
+      {returnNewDocument: true},
+      (err, res) => {
+        if (err) {
+          sendResponse(response, buildFailedResponse(err));
+          return;
+        }
+
+        sendResponse(response, buildSuccessResponse(res));
+      }
+    )
+  });
+
+  app.post('/remove/transaction', verifyJWT_MW, isLogedIn, function(request, response, next) {
+    var user = request.user;
+    const { transaction } = request.body;
+
+    if (!transaction) {
+      sendResponse(response, buildFailedResponse({message: 'No transaction id specified!'}));
+      return;
+    }
+
+    Transaction.deleteOne({_id:transaction}, (err, res) => {
+      if (err) {
+        sendResponse(response, {status:'failed', error: err, data:[]});
+        return;
+      }
+
+      sendResponse(response, {status:'success', data:res, error:null});
+    })
   });
 
  function isLogedIn(request, response, next) {
@@ -238,5 +317,21 @@ module.exports = function(app, passport, logger, jwt) {
     response.end();
 
     //logger.info("~sendResponse()");
+  }
+
+  function buildFailedResponse(err) {
+    return {
+      status: 'failed',
+      error: err,
+      data: []
+    }
+  }
+
+  function buildSuccessResponse(data) {
+    return {
+      status: 'success',
+      data: data,
+      erorr: null,
+    }
   }
 }
