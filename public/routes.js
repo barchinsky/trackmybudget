@@ -153,6 +153,50 @@ module.exports = function(app, passport, logger, jwt) {
 
   });
 
+  // find transactions by budget id
+  app.post('/budget/transactions', verifyJWT_MW, isLogedIn, function(request, response, next) {
+    var user = request.user;
+    var { budget } = request.body;
+
+    if (!budget) {
+      sendResponse(response, buildFailedResponse({message:'No budget specified!'}));
+      return;
+    }
+
+    Budget.findOne({
+      userId:user.userId,
+      _id:budget
+    }, (err, budget) => {
+      if (err) {
+        sendResponse(response, buildFailedResponse(err));
+        return;
+      }
+      const {startDate, endDate} = budget;
+      console.log('Looking for transactions between:',startDate, endDate);
+
+      // find transactions made between budget start and end dates
+      Transaction.find({
+        date : { $gte: startDate, $lt: endDate}
+      }, (err, transactions) => {
+        if (err) {
+          sendResponse(response, buildFailedResponse(err));
+          return;
+        }
+
+        // find sum of all transactionSchema
+        let amountSpent = transactions.reduce((acc, transaction) => {
+          return acc.amount + transaction.amount;
+        });
+
+        console.log("Spent for current budget:", amountSpent);
+        const respData = {transactions:transactions, spent: amountSpent}
+
+        sendResponse(response, buildSuccessResponse(respData));
+      })
+
+    });
+  });
+
   app.post('/add/category', verifyJWT_MW, isLogedIn, function(request, response, next) {
     var user = request.user;
 
@@ -216,6 +260,20 @@ module.exports = function(app, passport, logger, jwt) {
         sendResponse(response, {status: 'success', data:result, error: null});
 
     });
+  });
+
+  app.post('/transactions', verifyJWT_MW, isLogedIn, function(request, response, next) {
+    var user = request.user;
+
+    Transaction.find({userId: user.userId}, (err, result) => {
+      if(err) {
+        sendResponse(response, buildFailedResponse(err));
+        return;
+      }
+      console.log(result);
+      sendResponse(response, buildSuccessResponse(result));
+    });
+
   });
 
   app.post('/add/transaction', verifyJWT_MW, isLogedIn, function(request, response, next) {
