@@ -1,9 +1,13 @@
 var verifyJWT_MW = require('./src/lib/verifyJWT_MW');
+var db = require('./src/utils/db');
+
 var Budget = require('./src/models/budget');
 var Category = require('./src/models/category');
 var Transaction = require('./src/models/transaction');
 
 module.exports = function(app, passport, logger, jwt) {
+  require('./src/routes/budget.js')(app, passport, logger, jwt, isLogedIn, sendResponse, buildFailedResponse, buildSuccessResponse);
+
   app.get("/", function(request, response){
       logger.info("/");
       sendResponse(response, {status:'/status - status of server'});
@@ -124,27 +128,14 @@ module.exports = function(app, passport, logger, jwt) {
       },
       (err, result) => {
       if (err) {
-        sendResponse(response, {status: 'failed', error: err, data: []});
+        sendResponse(response, buildFailedResponse(err));
         return;
       } else {
-        sendResponse(response, {status: 'success', data: result, error: null});
+        sendResponse(response, buildSuccessResponse(result));
       }
     });
 
     //db.createBudget(userId, request.body)
-  });
-
-  app.post('/budgets', verifyJWT_MW, isLogedIn, function(request, response, next) {
-    var user = request.user;
-
-    Budget.find({userId: user.userId}, (err, result) => {
-      if(err) {
-        sendResponse(response, {status: 'failed', error: err});
-        return;
-      }
-      console.log(result);
-      sendResponse(response, {status:'success', data: result});
-    });
   });
 
   app.get('/remove/budget', verifyJWT_MW, isLogedIn, function(request, response, next) {
@@ -184,14 +175,14 @@ module.exports = function(app, passport, logger, jwt) {
         }
 
         // find sum of all transactionSchema
-        let amountSpent = transactions.reduce((acc, transaction) => {
-          return acc.amount + transaction.amount;
-        });
+        // let amountSpent = transactions.reduce((acc, transaction) => {
+        //   return acc.amount + transaction.amount;
+        // });
+        //
+        // console.log("Spent for current budget:", amountSpent);
+        // const respData = {transactions:transactions, spent: amountSpent}
 
-        console.log("Spent for current budget:", amountSpent);
-        const respData = {transactions:transactions, spent: amountSpent}
-
-        sendResponse(response, buildSuccessResponse(respData));
+        sendResponse(response, buildSuccessResponse(transactions));
       })
 
     });
