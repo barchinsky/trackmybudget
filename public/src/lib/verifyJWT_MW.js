@@ -1,9 +1,9 @@
 var verifyJWT = require('../utils/verifyJWT');
 
 module.exports = function(request, response, next) {
-  var token = request.body.token;
+  var tokenFromHeader = request.get('token');
 
-  verifyJWT(token).
+  verifyJWT(tokenFromHeader).
     then( decoded => {
       request.user = decoded;
       next();
