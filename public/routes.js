@@ -6,7 +6,7 @@ var Category = require('./src/models/category');
 var Transaction = require('./src/models/transaction');
 
 module.exports = function(app, passport, logger, jwt) {
-  require('./src/routes/budget.js')(app, passport, logger, jwt, isLogedIn, sendResponse, buildFailedResponse, buildSuccessResponse);
+  require('./src/routes/budget.js')(app, passport, logger, jwt);
 
   app.get("/", function(request, response){
       logger.info("/");
