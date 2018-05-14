@@ -5,6 +5,8 @@ var Budget = require('./src/models/budget');
 var Category = require('./src/models/category');
 var Transaction = require('./src/models/transaction');
 
+var { isLogedIn, buildFailedResponse, buildSuccessResponse, sendResponse } = require('./src/utils/responseUtils');
+
 module.exports = function(app, passport, logger, jwt) {
   require('./src/routes/budget.js')(app, passport, logger, jwt);
 
@@ -13,11 +15,11 @@ module.exports = function(app, passport, logger, jwt) {
       sendResponse(response, {status:'/status - status of server'});
   });
 
-  app.post("/status", [verifyJWT_MW, isLogedIn], function(request, response){
+  app.get("/status", [verifyJWT_MW, isLogedIn], function(request, response){
       sendResponse(response, {status:'alive'});
   });
 
-  app.post("/isauth", verifyJWT_MW, function(request, response){
+  app.get("/isauth", verifyJWT_MW, function(request, response){
     logger.info("isauth()", request.user, '|');
     sendResponse(response, {isAuthenticated: !!request.user});
   });
@@ -35,7 +37,7 @@ module.exports = function(app, passport, logger, jwt) {
         return;
       }
 
-      sendResponse(response, userData);
+      sendResponse(response, buildSuccessResponse(userData));
     })(request, response, next);
   });
 
@@ -57,136 +59,18 @@ module.exports = function(app, passport, logger, jwt) {
       if (!user) {
         var msg = request.flash('signupMessage');
         logger.info(msg);
-        sendResponse(response, {data: [], msg:msg, err:null});
+        sendResponse(response, buildFailedResponse({message: msg}));
         return;
 
        }
 
       logger.info('user registered:', user.username);
-      sendResponse(response, {data:user});
+      sendResponse(response, buildSuccessResponse([]));
 
     })(request, response, next);
   });
 
-  app.post('/add/budget', verifyJWT_MW, isLogedIn, function(request, response, next){
-    var userId = request.user.userId;
-    // var budgetName = request.body.name;
-    // var startDate = request.body.startDate;
-    // var endDate = request.body.endDate;
-    // var estimate = request.body.estimate;
-    logger.info('add.budget');
-    const {name, startDate, endDate, estimate} = request.body;
-    logger.info(userId, name, startDate, endDate, estimate);
-    // sendResponse(response, {status: 'success'});
-    // return;
 
-    var newBudget = Budget();
-    newBudget.userId = userId;
-    newBudget.name = name;
-    newBudget.startDate = startDate;
-    newBudget.endDate = endDate;
-    newBudget.estimate = estimate || 0;
-
-    newBudget.save(err => {
-      if (err) {
-        sendResponse(response, {status: 'failed', error: err});
-        return;
-      } else {
-        sendResponse(response, {status: 'success'});
-      }
-
-    });
-
-    //db.createBudget(userId, request.body)
-  });
-
-  app.post('/update/budget', verifyJWT_MW, isLogedIn, function(request, response, next){
-    var userId = request.user.userId;
-    logger.info('update.budget');
-    const {budget, name, startDate, endDate, estimate} = request.body;
-    logger.info(userId, name, startDate, endDate, estimate);
-    // sendResponse(response, {status: 'success'});
-    // return;
-
-    if (!budget || !name || !startDate || !endDate || !estimate) {
-      sendResponse(response, {status:'failed', error: '{budget}, {name}, {startDate}, {endDate}, {estimate} are mandatory!', data:[]});
-      return;
-    }
-
-    Budget.findOneAndUpdate(
-      {
-        userId: userId,
-        _id: budget
-
-      },
-      { $set:{
-          name: name,
-          startDate: startDate,
-          endDate: endDate,
-          estimate: estimate,
-        }
-      },
-      (err, result) => {
-      if (err) {
-        sendResponse(response, buildFailedResponse(err));
-        return;
-      } else {
-        sendResponse(response, buildSuccessResponse(result));
-      }
-    });
-
-    //db.createBudget(userId, request.body)
-  });
-
-  app.get('/remove/budget', verifyJWT_MW, isLogedIn, function(request, response, next) {
-    logger.info('remove.budget');
-    sendResponse(response, {status: 'not implemented!'});
-
-  });
-
-  // find transactions by budget id
-  app.post('/budget/transactions', verifyJWT_MW, isLogedIn, function(request, response, next) {
-    var user = request.user;
-    var { budget } = request.body;
-
-    if (!budget) {
-      sendResponse(response, buildFailedResponse({message:'No budget specified!'}));
-      return;
-    }
-
-    Budget.findOne({
-      userId:user.userId,
-      _id:budget
-    }, (err, budget) => {
-      if (err) {
-        sendResponse(response, buildFailedResponse(err));
-        return;
-      }
-      const {startDate, endDate} = budget;
-      console.log('Looking for transactions between:',startDate, endDate);
-
-      // find transactions made between budget start and end dates
-      Transaction.find({
-        date : { $gte: startDate, $lt: endDate}
-      }, (err, transactions) => {
-        if (err) {
-          sendResponse(response, buildFailedResponse(err));
-          return;
-        }
-
-        // find sum of all transactionSchema
-        // let amountSpent = transactions.reduce((acc, transaction) => {
-        //   return acc.amount + transaction.amount;
-        // });
-        //
-        // console.log("Spent for current budget:", amountSpent);
-        // const respData = {transactions:transactions, spent: amountSpent}
-
-        sendResponse(response, buildSuccessResponse(transactions));
-      })
-
-    });
-  });
 
   app.post('/add/category', verifyJWT_MW, isLogedIn, function(request, response, next) {
     var user = request.user;
@@ -199,27 +83,27 @@ module.exports = function(app, passport, logger, jwt) {
     newCat.name = name;
     newCat.color = color;
 
-    newCat.save( err => {
+    newCat.save( (err, category) => {
       if (err) {
-        sendResponse(response, {status: 'failed', error: err});
+        sendResponse(response, buildFailedResponse(err));
         return;
       } else {
-        sendResponse(response, {status: 'success', error: null, data:[]});
+        sendResponse(response, buildSuccessResponse(category));
       }
     });
 
   });
 
-  app.post('/categories', verifyJWT_MW, isLogedIn, function(request, response, next) {
+  app.get('/categories', verifyJWT_MW, isLogedIn, function(request, response, next) {
     var user = request.user;
 
     Category.find({userId: user.userId}, (err, result) => {
       if(err) {
-        sendResponse(response, {status: 'failed', error: err});
+        sendResponse(response, buildFailedResponse(err));
         return;
       }
       console.log(result);
-      sendResponse(response, {status:'success', data: result});
+      sendResponse(response, buildSuccessResponse(result));
     });
 
   });
@@ -229,12 +113,12 @@ module.exports = function(app, passport, logger, jwt) {
     const {category, name, color} = request.body;
 
     if (!category) {
-      sendResponse(response, {status: 'failed', err: 'No category field specified.'});
+      sendResponse(response, buildFailedResponse({message: 'No category field specified.'}));
       return;
     }
 
     if (!name || !color) {
-      sendResponse(response, {status: 'failed', err: 'No value to modify specified. {name} and {color} has to be set.', data:[]});
+      sendResponse(response, buildFailedResponse({message: 'No value to modify specified. {name} and {color} has to be set.'}));
       return;
     }
 
@@ -244,16 +128,16 @@ module.exports = function(app, passport, logger, jwt) {
       {returnNewDocument: true},
       (err, result) => {
         if (err) {
-          sendResponse(response, {status: 'failed', data: [], error: err});
+          sendResponse(response, buildFailedResponse(err));
           return;
         }
 
-        sendResponse(response, {status: 'success', data:result, error: null});
+        sendResponse(response, buildSuccessResponse(result));
 
     });
   });
 
-  app.post('/transactions', verifyJWT_MW, isLogedIn, function(request, response, next) {
+  app.get('/transactions', verifyJWT_MW, isLogedIn, function(request, response, next) {
     var user = request.user;
 
     Transaction.find({userId: user.userId}, (err, result) => {
@@ -261,7 +145,6 @@ module.exports = function(app, passport, logger, jwt) {
         sendResponse(response, buildFailedResponse(err));
         return;
       }
-      console.log(result);
       sendResponse(response, buildSuccessResponse(result));
     });
 
@@ -288,10 +171,10 @@ module.exports = function(app, passport, logger, jwt) {
 
     t.save( (err, res) => {
       if (err) {
-        sendResponse(response, {status: 'failed', error: err, data:[]});
+        sendResponse(response, buildFailedResponse(err));
         return;
       } else {
-        sendResponse(response, {status: 'success', error: null, data:[res]});
+        sendResponse(response, buildSuccessResponse(res));
       }
     });
 
@@ -338,49 +221,12 @@ module.exports = function(app, passport, logger, jwt) {
 
     Transaction.deleteOne({_id:transaction}, (err, res) => {
       if (err) {
-        sendResponse(response, {status:'failed', error: err, data:[]});
+        sendResponse(response, buildFailedResponse(err));
         return;
       }
 
-      sendResponse(response, {status:'success', data:res, error:null});
+      sendResponse(response, buildSuccessResponse([]));
     })
   });
 
- function isLogedIn(request, response, next) {
-    logger.info("isLogedIn", !!request.user);
-    if (!!request.user) {
-      next();
-      return;
-    }
-
-    response.status(400)
-        .json({message: "Invalid token."});
-  }
-
-  function sendResponse(response, data){
-    //logger.info("sendResponse()");
-    // Convert data to Json-friendly object
-    // Send results back to the client
-    response.setHeader("Access-Control-Allow-Origin", "*");
-    response.send(data);
-    response.end();
-
-    //logger.info("~sendResponse()");
-  }
-
-  function buildFailedResponse(err) {
-    return {
-      status: 'failed',
-      error: err,
-      data: []
-    }
-  }
-
-  function buildSuccessResponse(data) {
-    return {
-      status: 'success',
-      data: data,
-      erorr: null,
-    }
-  }
 }
