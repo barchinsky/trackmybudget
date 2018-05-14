@@ -108,20 +108,26 @@ module.exports = function(app, passport, logger, jwt) {
     }
 
     Budget.findOne({
-      userId:user.userId,
-      _id:budget
-    }, (err, budget) => {
+        userId:user.userId,
+        _id:budget
+      }, (err, budget) => {
       if (err) {
         sendResponse(response, buildFailedResponse(err));
         return;
       }
+      console.log(budget);
+      if (!budget) {
+        sendResponse(response, buildSuccessResponse([]));
+        return;
+      }
+
       const {startDate, endDate} = budget;
       console.log('Looking for transactions between:',startDate, endDate);
 
       // find transactions made between budget start and end dates
       Transaction.find({
-        date : { $gte: startDate, $lt: endDate}
-      }, (err, transactions) => {
+          date : { $gte: startDate, $lt: endDate}
+        }, (err, transactions) => {
         if (err) {
           sendResponse(response, buildFailedResponse(err));
           return;
