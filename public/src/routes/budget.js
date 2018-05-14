@@ -6,7 +6,7 @@ var Transaction = require('../models/transaction');
 var { isLogedIn, buildFailedResponse, buildSuccessResponse, sendResponse } = require('../utils/responseUtils');
 
 module.exports = function(app, passport, logger, jwt) {
-  app.post('/budgets', verifyJWT_MW, isLogedIn, async (request, response, next) => {
+  app.get('/budgets', verifyJWT_MW, isLogedIn, async (request, response, next) => {
     var user = request.user;
       try {
         const budgets = await db.getBudgetsWithAmount(user.userId);
@@ -18,9 +18,9 @@ module.exports = function(app, passport, logger, jwt) {
 
   app.post('/add/budget', verifyJWT_MW, isLogedIn, function(request, response, next){
     var userId = request.user.userId;
-    logger.info('add.budget');
+    //logger.info('add.budget');
     const {name, startDate, endDate, estimate} = request.body;
-    logger.info(userId, name, startDate, endDate, estimate);
+    //logger.info(userId, name, startDate, endDate, estimate);
 
     var newBudget = Budget();
     newBudget.userId = userId;
@@ -29,12 +29,12 @@ module.exports = function(app, passport, logger, jwt) {
     newBudget.endDate = endDate;
     newBudget.estimate = estimate || 0;
 
-    newBudget.save(err => {
+    newBudget.save( (err, res) => {
       if (err) {
-        sendResponse(response, {status: 'failed', error: err});
+        sendResponse(response, buildFailedResponse(err));
         return;
       } else {
-        sendResponse(response, {status: 'success'});
+        sendResponse(response, buildSuccessResponse(res));
       }
 
     });
@@ -76,13 +76,25 @@ module.exports = function(app, passport, logger, jwt) {
       }
     });
 
-    //db.createBudget(userId, request.body)
   });
 
-  app.get('/remove/budget', verifyJWT_MW, isLogedIn, function(request, response, next) {
-    logger.info('remove.budget');
-    sendResponse(response, {status: 'not implemented!'});
+  app.post('/remove/budget', verifyJWT_MW, isLogedIn, function(request, response, next) {
+    var user = request.user;
+    const { budget } = request.body;
 
+    if (!budget) {
+      sendResponse(response, buildFailedResponse({message: 'No budget id specified!'}));
+      return;
+    }
+
+    Budget.deleteOne({_id:budget}, (err, res) => {
+      if (err) {
+        sendResponse(response, buildFailedResponse(err));
+        return;
+      }
+
+      sendResponse(response, buildSuccessResponse([]));
+    });
   });
 
   // find transactions by budget id
