@@ -1,0 +1,713 @@
+{
+	"variables": [],
+	"info": {
+		"name": "trackmybudget",
+		"_postman_id": "de5848ce-1c51-877c-c252-43ef07ed94cd",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Login",
+			"request": {
+				"url": "{{host}}/login",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"description": ""
+					},
+					{
+						"key": "token",
+						"value": "{{testUserToken}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "email",
+							"value": "test",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "12345",
+							"description": "",
+							"type": "text"
+						}
+					]
+				},
+				"description": "Send login request"
+			},
+			"response": []
+		},
+		{
+			"name": "Logout",
+			"request": {
+				"url": "localhost:18000/logout",
+				"method": "GET",
+				"header": [
+					{
+						"key": "token",
+						"value": "{{testUserToken}}",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Sign up",
+			"request": {
+				"url": "{{host}}/signup",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "email",
+							"value": "test2",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "12345",
+							"description": "",
+							"type": "text"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "IsAuth",
+			"request": {
+				"url": "{{host}}/isauth",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"description": ""
+					},
+					{
+						"key": "token",
+						"value": "{{testUserToken}}",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Status",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test('Server status is alive', function() {",
+							"    let res = pm.response.json();",
+							"    ",
+							"    pm.expect(res.status).to.eql('alive');",
+							"});"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "{{host}}/status",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"description": ""
+					},
+					{
+						"key": "token",
+						"value": "{{testUserToken}}",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": ""
+			},
+			"response": [
+				{
+					"id": "11815691-a1eb-4821-90db-dc7a1a7a13e2",
+					"name": "Status",
+					"originalRequest": {
+						"url": "{{host}}/status",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded",
+								"description": ""
+							},
+							{
+								"key": "token",
+								"value": "{{testUserToken}}",
+								"description": ""
+							}
+						],
+						"body": {}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"_postman_previewtype": "text",
+					"header": [
+						{
+							"name": "access-control-allow-origin",
+							"key": "access-control-allow-origin",
+							"value": "*",
+							"description": "Specifies a URI that may access the resource. For requests without credentials, the server may specify '*' as a wildcard, thereby allowing any origin to access the resource."
+						},
+						{
+							"name": "connection",
+							"key": "connection",
+							"value": "keep-alive",
+							"description": "Options that are desired for the connection"
+						},
+						{
+							"name": "content-length",
+							"key": "content-length",
+							"value": "18",
+							"description": "The length of the response body in octets (8-bit bytes)"
+						},
+						{
+							"name": "content-type",
+							"key": "content-type",
+							"value": "application/json; charset=utf-8",
+							"description": "The mime type of this content"
+						},
+						{
+							"name": "date",
+							"key": "date",
+							"value": "Mon, 14 May 2018 05:19:44 GMT",
+							"description": "The date and time that the message was sent"
+						},
+						{
+							"name": "etag",
+							"key": "etag",
+							"value": "W/\"12-A7Ru7R7DWDB2sMJMZduPL6roxxE\"",
+							"description": "An identifier for a specific version of a resource, often a message digest"
+						},
+						{
+							"name": "x-powered-by",
+							"key": "x-powered-by",
+							"value": "Express",
+							"description": "Specifies the technology (ASP.NET, PHP, JBoss, e.g.) supporting the web application (version details are often in X-Runtime, X-Version, or X-AspNet-Version)"
+						}
+					],
+					"cookie": [],
+					"responseTime": 45,
+					"body": "{\"status\":\"alive\"}"
+				}
+			]
+		},
+		{
+			"name": "Get budgets",
+			"request": {
+				"url": "{{host}}/budgets",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"description": ""
+					},
+					{
+						"key": "token",
+						"value": "{{testUserToken}}",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Add budget",
+			"request": {
+				"url": "{{host}}/add/budget",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"description": ""
+					},
+					{
+						"key": "token",
+						"value": "{{testUserToken}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "name",
+							"value": "April, 2018",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "startDate",
+							"value": "2018-04-01",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "endDate",
+							"value": "2018-05-01",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "estimate",
+							"value": "3200",
+							"description": "",
+							"type": "text"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Categories",
+			"request": {
+				"url": "{{host}}/categories",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"description": ""
+					},
+					{
+						"key": "token",
+						"value": "{{testUserToken}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "token",
+							"value": "{{testUserToken}}",
+							"description": "",
+							"type": "text"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Add category",
+			"request": {
+				"url": "{{host}}/add/category",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"description": ""
+					},
+					{
+						"key": "token",
+						"value": "{{testUserToken}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "name",
+							"value": "Cat2",
+							"type": "text",
+							"description": ""
+						},
+						{
+							"key": "color",
+							"value": "#2b2b2c",
+							"type": "text",
+							"description": ""
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Update category",
+			"request": {
+				"url": "{{host}}/update/category",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"description": ""
+					},
+					{
+						"key": "token",
+						"value": "{{testUserToken}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "category",
+							"value": "5ae4f75a180f792ee018ac38",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "name",
+							"value": "Cat2Updated",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "color",
+							"value": "red",
+							"description": "",
+							"type": "text"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Update budget",
+			"request": {
+				"url": "{{host}}/update/budget",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"description": ""
+					},
+					{
+						"key": "token",
+						"value": "{{testUserToken}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "budget",
+							"value": "5ae22d269febf40c5150c222",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "name",
+							"value": "March 2018",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "startDate",
+							"value": "2018-03-02",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "endDate",
+							"value": "2018-03-28",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "estimate",
+							"value": "1000",
+							"description": "",
+							"type": "text"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Add transaction",
+			"request": {
+				"url": "{{host}}/add/transaction",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"description": ""
+					},
+					{
+						"key": "token",
+						"value": "{{testUserToken}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "date",
+							"value": "2018-04-13",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "amount",
+							"value": "25",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "category",
+							"value": "5ae232093305571d3ca5d347",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "comment",
+							"value": "Food",
+							"description": "",
+							"type": "text"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Remove transaction",
+			"request": {
+				"url": "{{host}}/remove/transaction",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"description": ""
+					},
+					{
+						"key": "token",
+						"value": "{{testUserToken}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "transaction",
+							"value": "5aeb7c7b26eb7505bd59e738",
+							"description": "",
+							"type": "text"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Update transaction",
+			"request": {
+				"url": "{{host}}/update/transaction",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"description": ""
+					},
+					{
+						"key": "token",
+						"value": "{{testUserToken}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "amount",
+							"value": "43",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "category",
+							"value": "5ae232093305571d3ca5d347",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "comment",
+							"value": "Food for home",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "date",
+							"value": "2018-04-13",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "transaction",
+							"value": "5aef025b2d777f3d24000e5a",
+							"description": "",
+							"type": "text"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get transactions",
+			"request": {
+				"url": "{{host}}/transactions",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"description": ""
+					},
+					{
+						"key": "token",
+						"value": "{{testUserToken}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "token",
+							"value": "{{testUserToken}}",
+							"description": "",
+							"type": "text"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get budget transactions",
+			"request": {
+				"url": "{{host}}/budget/transactions",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"description": ""
+					},
+					{
+						"key": "token",
+						"value": "{{testUserToken}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "token",
+							"value": "{{testUserToken}}",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "budget",
+							"value": "5af3511f1e437b3ffa7df948",
+							"description": "",
+							"type": "text"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Remove budget",
+			"request": {
+				"url": "{{host}}/remove/budget",
+				"method": "POST",
+				"header": [
+					{
+						"key": "token",
+						"value": "{{testUserToken}}",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "budget",
+							"value": "5af919544c44d34544f713dc",
+							"description": "",
+							"type": "text"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		}
+	]
+}
